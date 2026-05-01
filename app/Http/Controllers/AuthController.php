@@ -71,11 +71,20 @@ class AuthController extends Controller
     {
         $request->validate([
             'name'      => 'required|string|max:100',
-            'email'     => 'required|email|unique:users,email',
+            'email'     => 'required|email',
             'password'  => 'required|min:6|confirmed',
             'role'      => 'required|in:teacher,student',
             'join_code' => 'nullable|string',
         ]);
+
+        // If email exists but was never verified, delete it and allow re-registration
+        $existing = User::where('email', $request->email)->first();
+        if ($existing) {
+            if ($existing->email_verified_at) {
+                return back()->withErrors(['email' => 'That email is already registered. Please log in instead.'])->onlyInput('name', 'email', 'role');
+            }
+            $existing->delete();
+        }
 
         $sectionId = null;
         if ($request->role === 'student' && $request->join_code) {
@@ -98,7 +107,7 @@ class AuthController extends Controller
         // Send verification email
         try {
             $this->sendVerificationCode($user);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // Mail failure — user can request resend on the verify page
         }
 
