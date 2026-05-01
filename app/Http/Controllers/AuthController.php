@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use App\Mail\VerificationEmail;
 use App\Models\User;
 use App\Models\Section;
 
@@ -223,11 +222,37 @@ class AuthController extends Controller
     {
         $code = strtoupper(Str::random(6));
 
-        $user->email_verification_code        = $code;
-        $user->email_verification_expires_at  = now()->addMinutes(15);
+        $user->email_verification_code       = $code;
+        $user->email_verification_expires_at = now()->addMinutes(15);
         $user->save();
 
-        Mail::to($user->email)->send(new VerificationEmail($user->name, $code));
+        $apiKey = env('RESEND_API_KEY');
+        if (!$apiKey) {
+            throw new \RuntimeException('RESEND_API_KEY is not configured.');
+        }
+
+        $response = Http::timeout(10)
+            ->withToken($apiKey)
+            ->post('https://api.resend.com/emails', [
+                'from'    => 'KinderLearn <' . env('MAIL_FROM_ADDRESS', 'noreply@kinderlearn.com') . '>',
+                'to'      => [$user->email],
+                'subject' => 'Your KinderLearn Verification Code',
+                'html'    => '
+                    <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#fff9f0;border-radius:16px;">
+                        <h2 style="color:#FF6B6B;margin-bottom:8px;">🎓 KinderLearn</h2>
+                        <p style="color:#555;font-size:16px;">Hi <strong>' . e($user->name) . '</strong>!</p>
+                        <p style="color:#555;font-size:16px;">Your verification code is:</p>
+                        <div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#6366f1;background:#f0f0ff;padding:16px 24px;border-radius:12px;display:inline-block;margin:16px 0;">'
+                            . $code .
+                        '</div>
+                        <p style="color:#888;font-size:13px;">This code expires in 15 minutes.</p>
+                        <p style="color:#888;font-size:13px;">If you did not request this, you can safely ignore this email.</p>
+                    </div>',
+            ]);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('Resend API error: ' . $response->body());
+        }
     }
 
     private function maskEmail(string $email): string
