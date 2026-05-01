@@ -12,8 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
 
-    {{-- Tailwind CSS via CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- Compiled CSS (includes Tailwind) --}}
+    @vite(['resources/css/app.css'])
 
     {{-- Puter.js — free AI APIs including TTS --}}
     <script src="https://js.puter.com/v2/"></script>
