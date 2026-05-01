@@ -315,6 +315,14 @@
                 </div>
 
                 
+                <button onclick="document.getElementById('support-modal').classList.remove('hidden')"
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500
+                               hover:bg-orange-50 hover:text-orange-500 transition"
+                        title="Customer Support">
+                    <i class="ri-customer-service-2-line" style="font-size:1.15rem;"></i>
+                </button>
+
+                
                 <div class="relative" id="notif-wrap">
                     <button onclick="toggleNotifDropdown()"
                             class="relative w-9 h-9 flex items-center justify-center rounded-lg text-gray-500
@@ -397,6 +405,62 @@
         <main class="flex-1 overflow-y-auto p-4 md:p-8">
             <?php echo $__env->yieldContent('student-content'); ?>
         </main>
+    </div>
+</div>
+
+
+<div id="support-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl w-full mx-4 p-7" style="max-width:440px;">
+        <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-white text-lg"
+                 style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);">
+                <i class="ri-customer-service-2-line"></i>
+            </div>
+            <div>
+                <h3 class="font-fredoka text-xl text-gray-800 leading-tight">Need Help?</h3>
+                <p class="text-xs text-gray-400 font-semibold">Send a message to our support team</p>
+            </div>
+            <button onclick="document.getElementById('support-modal').classList.add('hidden')"
+                    class="ml-auto w-8 h-8 rounded-xl flex items-center justify-center text-gray-400
+                           hover:bg-gray-100 hover:text-gray-700 transition">
+                <i class="ri-close-line text-lg"></i>
+            </button>
+        </div>
+
+        <?php if(session('support_success')): ?>
+        <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-sm font-semibold flex items-center gap-2">
+            <i class="ri-checkbox-circle-line"></i> <?php echo e(session('support_success')); ?>
+
+        </div>
+        <?php endif; ?>
+
+        <form method="POST" action="<?php echo e(route('student.support.send')); ?>" class="space-y-4">
+            <?php echo csrf_field(); ?>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Subject</label>
+                <input type="text" name="subject" required maxlength="150"
+                       class="w-full px-4 py-2.5 rounded-2xl border-2 border-gray-200 focus:border-orange-400 focus:outline-none text-sm"
+                       placeholder="e.g., I can't access my activity">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Message</label>
+                <textarea name="body" required maxlength="2000" rows="4"
+                          class="w-full px-4 py-2.5 rounded-2xl border-2 border-gray-200 focus:border-orange-400 focus:outline-none text-sm resize-none"
+                          placeholder="Tell us what's going on..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-1">
+                <button type="button"
+                        onclick="document.getElementById('support-modal').classList.add('hidden')"
+                        class="flex-1 py-2.5 rounded-2xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition text-sm">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 py-2.5 rounded-2xl font-bold text-white transition hover:opacity-90 text-sm"
+                        style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);">
+                    <i class="ri-send-plane-line mr-1"></i> Send Message
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

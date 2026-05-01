@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Module;
 use App\Models\Section;
+use App\Models\Message;
+use App\Models\UserNotification;
 
 class AdminController extends Controller
 {
@@ -178,11 +180,80 @@ class AdminController extends Controller
 
     public function notificationsPreview()
     {
+        $admin  = Auth::user();
+        $unread = Message::where('receiver_id', $admin->id)->whereNull('read_at')->latest()->take(5)->get()
+            ->map(fn($m) => [
+                'icon'  => '💬',
+                'title' => 'Support: ' . \Str::limit($m->subject, 40),
+                'body'  => $m->sender->name . ': ' . \Str::limit($m->body, 50),
+                'link'  => route('admin.support.view', $m->id),
+            ]);
+
         $recent = User::latest()->take(3)->get()->map(fn($u) => [
             'icon'  => '👤',
             'title' => 'New user: ' . $u->name,
             'body'  => ucfirst($u->role) . ' joined ' . $u->created_at->diffForHumans(),
+            'link'  => null,
         ]);
-        return response()->json($recent->values());
+
+        return response()->json($unread->merge($recent)->take(5)->values());
+    }
+
+    public function supportInbox()
+    {
+        $admin    = Auth::user();
+        $messages = Message::where('receiver_id', $admin->id)
+            ->with('sender')
+            ->latest()
+            ->paginate(20);
+
+        $unreadCount = Message::where('receiver_id', $admin->id)->whereNull('read_at')->count();
+
+        return view('admin.support', compact('messages', 'unreadCount'));
+    }
+
+    public function supportView(Message $message)
+    {
+        $admin = Auth::user();
+        abort_unless($message->receiver_id === $admin->id, 403);
+
+        // Mark as read
+        if (!$message->read_at) {
+            $message->update(['read_at' => now()]);
+        }
+
+        return view('admin.support-view', compact('message'));
+    }
+
+    public function supportReply(\Illuminate\Http\Request $request, Message $message)
+    {
+        $admin = Auth::user();
+        abort_unless($message->receiver_id === $admin->id, 403);
+
+        $request->validate(['body' => 'required|string|max:2000']);
+
+        Message::create([
+            'sender_id'   => $admin->id,
+            'receiver_id' => $message->sender_id,
+            'subject'     => 'Re: ' . $message->subject,
+            'body'        => $request->body,
+        ]);
+
+        UserNotification::create([
+            'user_id' => $message->sender_id,
+            'title'   => 'Support Reply',
+            'message' => 'The admin replied to your support request: "' . \Str::limit($message->subject, 60) . '"',
+            'type'    => 'message',
+        ]);
+
+        return back()->with('success', 'Reply sent!');
+    }
+
+    public function supportDelete(Message $message)
+    {
+        $admin = Auth::user();
+        abort_unless($message->receiver_id === $admin->id, 403);
+        $message->delete();
+        return redirect()->route('admin.support')->with('success', 'Message deleted.');
     }
 }

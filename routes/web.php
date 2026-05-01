@@ -112,6 +112,9 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
     Route::get('/classes', [StudentController::class, 'classes'])->name('classes');
     Route::post('/classes/join', [StudentController::class, 'joinClass'])->name('classes.join');
 
+    // Support / Feedback
+    Route::post('/support', [App\Http\Controllers\SupportController::class, 'store'])->name('support.send');
+
 });
 
 // -----------------------------------------------
@@ -199,6 +202,9 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     // Notifications preview for dropdown
     Route::get('/notifications/preview', [TeacherController::class, 'notificationsPreview'])->name('notifications.preview');
 
+    // Support / Feedback
+    Route::post('/support', [App\Http\Controllers\SupportController::class, 'store'])->name('support.send');
+
 });
 
 // -----------------------------------------------
@@ -239,6 +245,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Notifications preview
     Route::get('/notifications/preview', [AdminController::class, 'notificationsPreview'])->name('notifications.preview');
+
+    // Support inbox
+    Route::get('/support', [AdminController::class, 'supportInbox'])->name('support');
+    Route::get('/support/{message}', [AdminController::class, 'supportView'])->name('support.view');
+    Route::post('/support/{message}/reply', [AdminController::class, 'supportReply'])->name('support.reply');
+    Route::delete('/support/{message}', [AdminController::class, 'supportDelete'])->name('support.delete');
 
 });
 

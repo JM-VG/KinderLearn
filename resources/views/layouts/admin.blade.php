@@ -212,6 +212,25 @@
                 <span class="sb-label">Settings</span>
             </a>
 
+            @php $supportUnread = \App\Models\Message::where('receiver_id', auth()->id())->whereNull('read_at')->count(); @endphp
+            <a href="{{ route('admin.support') }}"
+               class="sb-link {{ request()->routeIs('admin.support*') ? 'sb-active' : '' }}">
+                <span class="sb-icon relative">
+                    <i class="ri-customer-service-2-line"></i>
+                    @if($supportUnread > 0)
+                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white flex items-center justify-center font-bold"
+                          style="font-size:0.55rem; background:#ef4444;">{{ $supportUnread > 9 ? '9+' : $supportUnread }}</span>
+                    @endif
+                </span>
+                <span class="sb-label flex items-center gap-2">
+                    Support
+                    @if($supportUnread > 0)
+                    <span class="px-1.5 py-0.5 rounded-full text-white font-bold"
+                          style="font-size:0.6rem; background:#ef4444;">{{ $supportUnread }}</span>
+                    @endif
+                </span>
+            </a>
+
         </nav>
     </aside>
 
