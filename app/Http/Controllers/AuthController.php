@@ -78,20 +78,31 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name'            => $request->name,
-            'email'           => $request->email,
-            'password'        => Hash::make($request->password),
-            'role'            => $request->role,
-            'section_id'      => $sectionId,
-            'avatar'          => 'avatar1.png',
-            'email_verified_at' => now(),
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'role'       => $request->role,
+            'section_id' => $sectionId,
+            'avatar'     => 'avatar1.png',
         ]);
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        try {
+            $this->sendVerificationCode($user);
+        } catch (\Throwable $e) {
+            // Email failed — auto-verify so user is not locked out
+            $user->email_verified_at = now();
+            $user->save();
+            Auth::login($user);
+            $request->session()->regenerate();
+            return redirect()->route('dashboard')
+                ->with('success', 'Account created! Welcome to KinderLearn.');
+        }
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Account created! Welcome to KinderLearn 🎉');
+        $request->session()->put('verification_user_id', $user->id);
+        $request->session()->put('verification_email', $this->maskEmail($user->email));
+
+        return redirect()->route('auth.verify-email')
+            ->with('success', 'Account created! Check your email for the verification code.');
     }
 
     public function showVerifyEmail()
@@ -199,7 +210,7 @@ class AuthController extends Controller
         $response = Http::timeout(10)
             ->withToken($apiKey)
             ->post('https://api.resend.com/emails', [
-                'from'    => 'KinderLearn <' . env('MAIL_FROM_ADDRESS', 'noreply@kinderlearn.com') . '>',
+                'from'    => 'KinderLearn <onboarding@resend.dev>',
                 'to'      => [$user->email],
                 'subject' => 'Your KinderLearn Verification Code',
                 'html'    => '
