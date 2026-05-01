@@ -47,6 +47,19 @@ Route::get('/setup', function () {
         $deleted = \App\Models\User::where('email', request('delete'))->delete();
         return response()->json(['deleted' => $deleted, 'email' => request('delete')]);
     }
+    if (request('test-email')) {
+        $apiKey = env('BREVO_API_KEY');
+        if (!$apiKey) return response()->json(['error' => 'BREVO_API_KEY not set']);
+        $response = \Illuminate\Support\Facades\Http::timeout(10)
+            ->withHeaders(['api-key' => $apiKey])
+            ->post('https://api.brevo.com/v3/smtp/email', [
+                'sender'      => ['name' => 'KinderLearn', 'email' => env('MAIL_FROM_ADDRESS')],
+                'to'          => [['email' => request('test-email')]],
+                'subject'     => 'KinderLearn Test Email',
+                'htmlContent' => '<p>This is a test email from KinderLearn.</p>',
+            ]);
+        return response()->json(['status' => $response->status(), 'body' => $response->json()]);
+    }
     return response()->json([
         'users' => $users,
         'sessions_table_exists' => $sessionsTableExists,
