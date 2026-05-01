@@ -40,7 +40,7 @@ class AuthController extends Controller
             if (!$user->email_verified_at) {
                 try {
                     $this->sendVerificationCode($user);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // Mail failure — still redirect to verify page; user can resend manually
                 }
                 Auth::logout();

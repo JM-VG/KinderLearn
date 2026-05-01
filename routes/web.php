@@ -39,6 +39,10 @@ Route::get('/setup', function () {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         return response()->json(['migrated' => true, 'sessions_table' => \Illuminate\Support\Facades\Schema::hasTable('sessions')]);
     }
+    if (request('verify')) {
+        $count = \App\Models\User::whereNull('email_verified_at')->update(['email_verified_at' => now()]);
+        return response()->json(['verified_users' => $count, 'message' => 'All users marked as email-verified']);
+    }
     return response()->json([
         'users' => $users,
         'sessions_table_exists' => $sessionsTableExists,

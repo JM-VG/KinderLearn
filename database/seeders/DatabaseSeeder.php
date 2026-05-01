@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------
         $admin = User::firstOrCreate(
             ['email' => 'admin@kinderlearn.com'],
-            ['name' => 'Admin User', 'password' => Hash::make('password'), 'role' => 'admin', 'avatar' => 'avatar1.png']
+            ['name' => 'Admin User', 'password' => Hash::make('password'), 'role' => 'admin', 'avatar' => 'avatar1.png', 'email_verified_at' => now()]
         );
 
         // -----------------------------------------------
@@ -27,12 +27,12 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------
         $teacher = User::firstOrCreate(
             ['email' => 'teacher@kinderlearn.com'],
-            ['name' => 'Ms. Sarah', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar2.png']
+            ['name' => 'Ms. Sarah', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar2.png', 'email_verified_at' => now()]
         );
 
         $teacher2 = User::firstOrCreate(
             ['email' => 'teacher2@kinderlearn.com'],
-            ['name' => 'Mr. Juan', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar3.png']
+            ['name' => 'Mr. Juan', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar3.png', 'email_verified_at' => now()]
         );
 
         // -----------------------------------------------
@@ -46,14 +46,14 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------
         // 4. Create student accounts
         // -----------------------------------------------
-        $student = User::firstOrCreate(
+        User::firstOrCreate(
             ['email' => 'student@kinderlearn.com'],
-            ['name' => 'Maria Clara', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar4.png', 'pin' => '1234', 'section_id' => $section->id]
+            ['name' => 'Maria Clara', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar4.png', 'pin' => '1234', 'section_id' => $section->id, 'email_verified_at' => now()]
         );
 
         User::firstOrCreate(
             ['email' => 'student2@kinderlearn.com'],
-            ['name' => 'Jose Rizal Jr.', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar5.png', 'pin' => '5678', 'section_id' => $section->id]
+            ['name' => 'Jose Rizal Jr.', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar5.png', 'pin' => '5678', 'section_id' => $section->id, 'email_verified_at' => now()]
         );
 
         // -----------------------------------------------
