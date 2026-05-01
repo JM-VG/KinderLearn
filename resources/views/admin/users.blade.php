@@ -53,13 +53,13 @@
                 <td class="px-6 py-4 text-sm text-gray-400">{{ $u->created_at->format('M d') }}</td>
                 <td class="px-6 py-4">
                     @if($u->id !== auth()->id())
-                    <form method="POST" action="{{ route('admin.users.delete', $u->id) }}"
-                          onsubmit="return confirm('Delete {{ $u->name }}?')">
+                    <form id="delete-form-{{ $u->id }}" method="POST" action="{{ route('admin.users.delete', $u->id) }}">
                         @csrf @method('DELETE')
-                        <button type="submit" class="text-red-400 font-bold text-sm hover:text-red-600">
-                            <i class="fa-solid fa-trash"></i> Delete
-                        </button>
                     </form>
+                    <button onclick="confirmDelete({{ $u->id }}, '{{ addslashes($u->name) }}', '{{ $u->email }}')"
+                            class="text-red-400 font-bold text-sm hover:text-red-600 transition">
+                        <i class="fa-solid fa-trash"></i> Delete
+                    </button>
                     @else
                     <span class="text-gray-300 text-sm">You</span>
                     @endif
@@ -70,4 +70,52 @@
     </table>
     <div class="p-4">{{ $users->links() }}</div>
 </div>
+{{-- Delete confirmation modal --}}
+<div id="delete-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeDeleteModal()"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm mx-4 text-center">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fa-solid fa-trash text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="font-fredoka text-2xl text-gray-800 mb-1">Delete Account?</h3>
+        <p class="text-gray-500 text-sm mb-1" id="modal-name"></p>
+        <p class="text-gray-400 text-xs mb-6" id="modal-email"></p>
+        <p class="text-gray-500 text-sm mb-6">This action <strong>cannot be undone.</strong> All data linked to this account will be removed.</p>
+        <div class="flex gap-3">
+            <button onclick="closeDeleteModal()"
+                    class="flex-1 px-4 py-3 rounded-2xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition">
+                Cancel
+            </button>
+            <button onclick="submitDelete()"
+                    class="flex-1 px-4 py-3 rounded-2xl font-bold text-white transition hover:opacity-90"
+                    style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+                <i class="fa-solid fa-trash mr-1"></i> Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    let pendingDeleteId = null;
+
+    function confirmDelete(id, name, email) {
+        pendingDeleteId = id;
+        document.getElementById('modal-name').textContent = name;
+        document.getElementById('modal-email').textContent = email;
+        document.getElementById('delete-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        pendingDeleteId = null;
+        document.getElementById('delete-modal').classList.add('hidden');
+    }
+
+    function submitDelete() {
+        if (pendingDeleteId) {
+            document.getElementById('delete-form-' + pendingDeleteId).submit();
+        }
+    }
+</script>
+@endpush
 @endsection
