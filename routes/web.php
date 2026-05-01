@@ -27,6 +27,16 @@ Route::get('/ping', function () {
     return response()->json(['ok' => true]);
 });
 
+// TEMP: check and create default accounts
+Route::get('/setup', function () {
+    $users = \App\Models\User::all(['id', 'email', 'role'])->toArray();
+    if (request('seed')) {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return response()->json(['seeded' => true, 'users_after' => \App\Models\User::all(['id','email','role'])]);
+    }
+    return response()->json(['users' => $users, 'hint' => 'add ?seed=1 to run seeder']);
+});
+
 // -----------------------------------------------
 // AUTHENTICATION ROUTES
 // -----------------------------------------------
