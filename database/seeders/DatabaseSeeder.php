@@ -17,65 +17,44 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------
         // 1. Create admin account
         // -----------------------------------------------
-        $admin = User::create([
-            'name'     => 'Admin User',
-            'email'    => 'admin@kinderlearn.com',
-            'password' => Hash::make('password'),
-            'role'     => 'admin',
-            'avatar'   => 'avatar1.png',
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@kinderlearn.com'],
+            ['name' => 'Admin User', 'password' => Hash::make('password'), 'role' => 'admin', 'avatar' => 'avatar1.png']
+        );
 
         // -----------------------------------------------
         // 2. Create teacher accounts
         // -----------------------------------------------
-        $teacher = User::create([
-            'name'     => 'Ms. Sarah',
-            'email'    => 'teacher@kinderlearn.com',
-            'password' => Hash::make('password'),
-            'role'     => 'teacher',
-            'avatar'   => 'avatar2.png',
-        ]);
+        $teacher = User::firstOrCreate(
+            ['email' => 'teacher@kinderlearn.com'],
+            ['name' => 'Ms. Sarah', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar2.png']
+        );
 
-        $teacher2 = User::create([
-            'name'     => 'Mr. Juan',
-            'email'    => 'teacher2@kinderlearn.com',
-            'password' => Hash::make('password'),
-            'role'     => 'teacher',
-            'avatar'   => 'avatar3.png',
-        ]);
+        $teacher2 = User::firstOrCreate(
+            ['email' => 'teacher2@kinderlearn.com'],
+            ['name' => 'Mr. Juan', 'password' => Hash::make('password'), 'role' => 'teacher', 'avatar' => 'avatar3.png']
+        );
 
         // -----------------------------------------------
         // 3. Create a class (section)
         // -----------------------------------------------
-        $section = Section::create([
-            'name'        => 'Sunflower Class',
-            'teacher_id'  => $teacher->id,
-            'join_code'   => 'SUN2024',
-            'description' => 'Our wonderful kindergarten class!',
-        ]);
+        $section = Section::firstOrCreate(
+            ['join_code' => 'SUN2024'],
+            ['name' => 'Sunflower Class', 'teacher_id' => $teacher->id, 'description' => 'Our wonderful kindergarten class!']
+        );
 
         // -----------------------------------------------
         // 4. Create student accounts
         // -----------------------------------------------
-        $student = User::create([
-            'name'       => 'Maria Clara',
-            'email'      => 'student@kinderlearn.com',
-            'password'   => Hash::make('password'),
-            'role'       => 'student',
-            'avatar'     => 'avatar4.png',
-            'pin'        => '1234',
-            'section_id' => $section->id,
-        ]);
+        $student = User::firstOrCreate(
+            ['email' => 'student@kinderlearn.com'],
+            ['name' => 'Maria Clara', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar4.png', 'pin' => '1234', 'section_id' => $section->id]
+        );
 
-        User::create([
-            'name'       => 'Jose Rizal Jr.',
-            'email'      => 'student2@kinderlearn.com',
-            'password'   => Hash::make('password'),
-            'role'       => 'student',
-            'avatar'     => 'avatar5.png',
-            'pin'        => '5678',
-            'section_id' => $section->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'student2@kinderlearn.com'],
+            ['name' => 'Jose Rizal Jr.', 'password' => Hash::make('password'), 'role' => 'student', 'avatar' => 'avatar5.png', 'pin' => '5678', 'section_id' => $section->id]
+        );
 
         // -----------------------------------------------
         // 5. Create learning modules
@@ -129,9 +108,10 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($modules as $moduleData) {
-            $module = Module::create($moduleData);
+            $module = Module::firstOrCreate(['subject' => $moduleData['subject']], $moduleData);
 
-            // Add sample activities to each module
+            if ($module->activities()->count() > 0) continue;
+
             Activity::create([
                 'module_id'    => $module->id,
                 'title'        => 'Watch and Learn',
@@ -167,13 +147,10 @@ class DatabaseSeeder extends Seeder
         // -----------------------------------------------
         // 6. Create a sample announcement
         // -----------------------------------------------
-        Announcement::create([
-            'teacher_id' => $teacher->id,
-            'section_id' => $section->id,
-            'title'      => 'Welcome to KinderLearn!',
-            'body'       => 'Hello Sunflower Class! We are so excited to start learning together. Please complete the Alphabet module first!',
-            'pinned'     => true,
-        ]);
+        Announcement::firstOrCreate(
+            ['title' => 'Welcome to KinderLearn!', 'section_id' => $section->id],
+            ['teacher_id' => $teacher->id, 'body' => 'Hello Sunflower Class! We are so excited to start learning together. Please complete the Alphabet module first!', 'pinned' => true]
+        );
 
         echo "Seeding complete! Default accounts:\n";
         echo "Admin:   admin@kinderlearn.com / password\n";
