@@ -43,6 +43,10 @@ Route::get('/setup', function () {
         $count = \App\Models\User::whereNull('email_verified_at')->update(['email_verified_at' => now()]);
         return response()->json(['verified_users' => $count, 'message' => 'All users marked as email-verified']);
     }
+    if (request('delete')) {
+        $deleted = \App\Models\User::where('email', request('delete'))->delete();
+        return response()->json(['deleted' => $deleted, 'email' => request('delete')]);
+    }
     return response()->json([
         'users' => $users,
         'sessions_table_exists' => $sessionsTableExists,

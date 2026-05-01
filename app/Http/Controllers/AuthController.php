@@ -32,23 +32,6 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-
-            $user = Auth::user();
-
-            // If email is not yet verified, send a fresh code and redirect to verify
-            if (!$user->email_verified_at) {
-                try {
-                    $this->sendVerificationCode($user);
-                } catch (\Throwable $e) {
-                    // Mail failure — still redirect to verify page; user can resend manually
-                }
-                Auth::logout();
-                $request->session()->put('verification_user_id', $user->id);
-                $request->session()->put('verification_email', $this->maskEmail($user->email));
-                return redirect()->route('auth.verify-email')
-                    ->with('success', 'Please verify your email before logging in. A new code has been sent.');
-            }
-
             return redirect()->route('dashboard');
         }
 
@@ -95,38 +78,20 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
-            'role'       => $request->role,
-            'section_id' => $sectionId,
-            'avatar'     => 'avatar1.png',
+            'name'            => $request->name,
+            'email'           => $request->email,
+            'password'        => Hash::make($request->password),
+            'role'            => $request->role,
+            'section_id'      => $sectionId,
+            'avatar'          => 'avatar1.png',
+            'email_verified_at' => now(),
         ]);
 
-        // Send verification email
-        $emailSent = false;
-        try {
-            $this->sendVerificationCode($user);
-            $emailSent = true;
-        } catch (\Throwable $e) {
-            // Mail failed — auto-verify so the user can still access the app
-            $user->email_verified_at = now();
-            $user->save();
-        }
+        Auth::login($user);
+        $request->session()->regenerate();
 
-        if (!$emailSent) {
-            Auth::login($user);
-            $request->session()->regenerate();
-            return redirect()->route('dashboard')
-                ->with('success', 'Account created! Welcome to KinderLearn.');
-        }
-
-        // Store user ID in session (not logged in yet)
-        $request->session()->put('verification_user_id', $user->id);
-        $request->session()->put('verification_email', $this->maskEmail($user->email));
-
-        return redirect()->route('auth.verify-email')
-            ->with('success', 'Account created! Check your email for the verification code.');
+        return redirect()->route('dashboard')
+            ->with('success', 'Account created! Welcome to KinderLearn 🎉');
     }
 
     public function showVerifyEmail()
