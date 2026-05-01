@@ -105,10 +105,21 @@ class AuthController extends Controller
         ]);
 
         // Send verification email
+        $emailSent = false;
         try {
             $this->sendVerificationCode($user);
+            $emailSent = true;
         } catch (\Throwable $e) {
-            // Mail failure — user can request resend on the verify page
+            // Mail failed — auto-verify so the user can still access the app
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
+        if (!$emailSent) {
+            Auth::login($user);
+            $request->session()->regenerate();
+            return redirect()->route('dashboard')
+                ->with('success', 'Account created! Welcome to KinderLearn.');
         }
 
         // Store user ID in session (not logged in yet)
